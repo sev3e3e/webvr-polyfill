@@ -15,7 +15,7 @@
 
 import { extend, isMobile, race, copyArray } from './util';
 import CardboardVRDisplay from 'cardboard-vr-display';
-import { version } from '../package.json';
+import packageInfo from '../package.json';
 import DefaultConfig from './config';
 
 function WebVRPolyfill(config) {
@@ -36,7 +36,7 @@ function WebVRPolyfill(config) {
   // If we don't have native 1.1 support, or if we want to provide
   // a CardboardVRDisplay in the event of native support with no displays,
   // inject our own polyfill
-  if (!this.hasNative || this.config.PROVIDE_MOBILE_VRDISPLAY && isMobile()) {
+  if (!this.hasNative || (this.config.PROVIDE_MOBILE_VRDISPLAY && isMobile())) {
     this.enable();
     // If we need to create a CardboardVRDisplay, fire the `vrdisplayconnect`
     // event when the polyfill is enabled
@@ -48,7 +48,7 @@ function WebVRPolyfill(config) {
   }
 }
 
-WebVRPolyfill.prototype.getPolyfillDisplays = function() {
+WebVRPolyfill.prototype.getPolyfillDisplays = function () {
   if (this._polyfillDisplaysPopulated) {
     return this.polyfillDisplays;
   }
@@ -56,18 +56,18 @@ WebVRPolyfill.prototype.getPolyfillDisplays = function() {
   // Add a Cardboard VRDisplay on compatible mobile devices
   if (isMobile()) {
     var vrDisplay = new CardboardVRDisplay({
-      ADDITIONAL_VIEWERS:           this.config.ADDITIONAL_VIEWERS,
-      DEFAULT_VIEWER:               this.config.DEFAULT_VIEWER,
-      MOBILE_WAKE_LOCK:             this.config.MOBILE_WAKE_LOCK,
-      DEBUG:                        this.config.DEBUG,
-      DPDB_URL:                     this.config.DPDB_URL,
-      CARDBOARD_UI_DISABLED:        this.config.CARDBOARD_UI_DISABLED,
-      K_FILTER:                     this.config.K_FILTER,
-      PREDICTION_TIME_S:            this.config.PREDICTION_TIME_S,
+      ADDITIONAL_VIEWERS: this.config.ADDITIONAL_VIEWERS,
+      DEFAULT_VIEWER: this.config.DEFAULT_VIEWER,
+      MOBILE_WAKE_LOCK: this.config.MOBILE_WAKE_LOCK,
+      DEBUG: this.config.DEBUG,
+      DPDB_URL: this.config.DPDB_URL,
+      CARDBOARD_UI_DISABLED: this.config.CARDBOARD_UI_DISABLED,
+      K_FILTER: this.config.K_FILTER,
+      PREDICTION_TIME_S: this.config.PREDICTION_TIME_S,
       ROTATE_INSTRUCTIONS_DISABLED: this.config.ROTATE_INSTRUCTIONS_DISABLED,
-      YAW_ONLY:                     this.config.YAW_ONLY,
-      BUFFER_SCALE:                 this.config.BUFFER_SCALE,
-      DIRTY_SUBMIT_FRAME_BINDINGS:  this.config.DIRTY_SUBMIT_FRAME_BINDINGS,
+      YAW_ONLY: this.config.YAW_ONLY,
+      BUFFER_SCALE: this.config.BUFFER_SCALE,
+      DIRTY_SUBMIT_FRAME_BINDINGS: this.config.DIRTY_SUBMIT_FRAME_BINDINGS,
     });
 
     this.polyfillDisplays.push(vrDisplay);
@@ -77,7 +77,7 @@ WebVRPolyfill.prototype.getPolyfillDisplays = function() {
   return this.polyfillDisplays;
 };
 
-WebVRPolyfill.prototype.enable = function() {
+WebVRPolyfill.prototype.enable = function () {
   this.enabled = true;
 
   // Polyfill native VRDisplay.getFrameData when the platform
@@ -89,7 +89,7 @@ WebVRPolyfill.prototype.enable = function() {
     var nativeGetFrameData = this.native.VRDisplay.prototype.getFrameData;
 
     // When using a native display with a polyfilled VRFrameData
-    window.VRDisplay.prototype.getFrameData = function(frameData) {
+    window.VRDisplay.prototype.getFrameData = function (frameData) {
       // This should only be called in the event of code instantiating
       // `window.VRFrameData` before the polyfill kicks in, which is
       // unrecommended, but happens anyway
@@ -104,8 +104,14 @@ WebVRPolyfill.prototype.enable = function() {
 
       nativeGetFrameData.call(this, nativeFrameData);
       frameData.pose = nativeFrameData.pose;
-      copyArray(nativeFrameData.leftProjectionMatrix, frameData.leftProjectionMatrix);
-      copyArray(nativeFrameData.rightProjectionMatrix, frameData.rightProjectionMatrix);
+      copyArray(
+        nativeFrameData.leftProjectionMatrix,
+        frameData.leftProjectionMatrix
+      );
+      copyArray(
+        nativeFrameData.rightProjectionMatrix,
+        frameData.rightProjectionMatrix
+      );
       copyArray(nativeFrameData.leftViewMatrix, frameData.leftViewMatrix);
       copyArray(nativeFrameData.rightViewMatrix, frameData.rightViewMatrix);
       //todo: copy
@@ -122,7 +128,7 @@ WebVRPolyfill.prototype.enable = function() {
   window.VRFrameData = CardboardVRDisplay.VRFrameData;
 };
 
-WebVRPolyfill.prototype.getVRDisplays = function() {
+WebVRPolyfill.prototype.getVRDisplays = function () {
   var config = this.config;
 
   if (!this.hasNative) {
@@ -130,11 +136,13 @@ WebVRPolyfill.prototype.getVRDisplays = function() {
   }
 
   return this.native.getVRDisplays.call(navigator).then((nativeDisplays) => {
-    return nativeDisplays.length > 0 ? nativeDisplays : this.getPolyfillDisplays();
+    return nativeDisplays.length > 0
+      ? nativeDisplays
+      : this.getPolyfillDisplays();
   });
 };
 
-WebVRPolyfill.version = version;
+WebVRPolyfill.version = packageInfo.version;
 
 // Attach polyfilled constructors
 WebVRPolyfill.VRFrameData = CardboardVRDisplay.VRFrameData;
